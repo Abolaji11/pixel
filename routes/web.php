@@ -6,6 +6,19 @@ use App\Http\Controllers\registerusercontroller;
 use App\Http\Controllers\sessioncontroller;
 use App\Http\Controllers\searchcontroller;
 use App\Http\Controllers\tagcontroller;
+use App\Http\Controllers\paystackpaymentcontroller;
+use App\Http\Controllers\PaymentController;
+use Illuminate\Support\Facades\Mail;
+
+
+// Route::get('/test-email', function () {
+//     Mail::raw('This is a test email', function ($message) {
+//         $message->to('your_test_email@mailtrap.io')
+//                 ->subject('Test Email');
+//     });
+
+//     return 'Test email sent!';
+// });
 
 Route::get('/career', [jobcontroller::class, 'career']);
 Route::get('/', [jobcontroller::class, 'index']);
@@ -13,6 +26,11 @@ Route::get('/salary', [jobcontroller::class, 'salary']);
 
 Route::get('/jobs/create', [jobcontroller::class,'create'])->middleware('auth');
 Route::post('/jobs', [jobcontroller::class,'store'])->middleware('auth');
+
+Route::post('/pay', [PaystackPaymentController::class, 'redirectToGateway'])->name('pay');
+Route::get('/payment/callback', [PaystackPaymentController::class, 'handleGatewayCallback']);
+Route::get('/payment-page',  [PaymentController::class, 'payment'])->name('payment-page');
+    
 
 Route::get('/search', [searchcontroller::class, '__invoke']);
 Route::get('/tags/{tag:name}', tagcontroller::class, );

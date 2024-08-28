@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Auth;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use App\Models\User;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;           
+use Illuminate\Support\Facades\Storage;      
+use Illuminate\Validation\Rule;                 
+use App\Models\User;                            
+use App\Mail\RegistrationCompleted; 
+
 
 class RegisterUserController extends Controller
 {
@@ -49,12 +51,13 @@ class RegisterUserController extends Controller
            'name' => $employerAttributes['employer'],
            'logo' => $logoPath,
         ]);
-
         
+
         // Log the user in
         auth()->login($user);
 
-        return redirect('/');
+
+        return redirect('/')->with('success', 'Registration completed successfully');
     }
 
     /**

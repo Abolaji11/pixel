@@ -7,7 +7,16 @@
         <section class="text-center pt-6">
             <div>
                 <h1 class=" font-bold text-4xl">Let's Find You A Great Job</h1>
-                
+                @if(session('error'))
+                <div class="alert alert-danger">
+                    {{ session('danger') }}
+                </div>
+               @endif
+               @if(session('success'))
+               <div class="alert alert-success">
+                   {{ session('success') }}
+               </div>
+              @endif
                 {{-- <form action="" class="mt-6">
                     <input type="text" placeholder="Web developer..."
                         class="rounded-xl bg-white/25 border-white/10 px-5 py-4 w-full max-w-xl mt-6">

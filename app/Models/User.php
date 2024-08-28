@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -26,5 +27,11 @@ class User extends Authenticatable
     public function employer(): HasOne
     {
         return $this->hasOne(Employer::class);
+    }
+
+
+    public function payment() {
+
+        return $this->BelongsToMany(Payment::class);
     }
 }

@@ -2,7 +2,7 @@
 
     <div class="text-justify">
 
-        <h1 class="text-bold">Salary Structure at Bolabi Media</h1> <br>
+        <h1 class="text-bold text-4xl">Salary Structure at Bolabi Media</h1> <br>
 
         <p>At Bolabi Media, we are committed to attracting and retaining top talent by offering a competitive and transparent salary structure. Our compensation packages are designed to reflect the value and contributions of our team members, ensuring that they are rewarded fairly for their hard work and dedication.
         </p> <br>

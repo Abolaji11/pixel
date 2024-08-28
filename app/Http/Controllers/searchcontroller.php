@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\job;
 
-class searchcontroller extends Controller
+class SearchController extends Controller
 {
     public function __invoke(Request $request)
     {

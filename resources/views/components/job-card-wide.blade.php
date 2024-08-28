@@ -12,7 +12,7 @@
         <h3 class="font-bold text-xl mt-3 group-hover:text-blue-600 transition-colors duration-300">
           <a href="{{$job->url}}" target="_blank" >
             {{$job->title}}</h3>
-        <p class="text-sm text-grey-400 mt-auto">{{$job->salary}}/p>
+        <p class="text-sm text-grey-400 mt-auto">{{$job->salary}} </p>
     </div>
 
 

@@ -2,7 +2,7 @@
 
     <div class="text-justify">
 
-        <h1 class="text-bold">Join Our Team: Shape the Future with Us</h1> <br>
+        <h1 class="text-bold text-4xl">Join Our Team: Shape the Future with Us</h1> <br>
 
         <p>At Bolabi Media, we believe that our people are our greatest asset. Our mission is to connect talented
             individuals with opportunities that inspire growth and innovation. We are passionate about fostering a

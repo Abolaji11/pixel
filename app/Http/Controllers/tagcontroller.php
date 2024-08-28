@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tag;
 use Illuminate\Http\Request;
-use App\Models\tag;
 
-class tagcontroller extends Controller
+class TagController extends Controller
 {
-    public function __invoke(tag $tag)
-   
+    public function __invoke(Tag $tag)
     {
-       //dd('i love u');
-       return view ('results', ['jobs' => $tag->jobs]);
-      
+        return view('results', ['jobs' => $tag->jobs]);
     }
 }
