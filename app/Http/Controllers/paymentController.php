@@ -10,8 +10,13 @@ class paymentController extends Controller
     $amount = $request->query('amount');
     $description = $request->query('description');
 
-    return view('payment-page', compact('amount', 'description'));
-    }
+   return view('payment-page', compact('amount', 'description'));
+    
+
+}
+   
+
+   // return redirect('/')->with('success', 'Job posted successfully!');
 }
 
 

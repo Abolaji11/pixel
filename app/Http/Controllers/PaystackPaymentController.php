@@ -7,96 +7,111 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\Payment;
 use Unicodeveloper\Paystack\Facades\Paystack;
-
-// Your controller methods remain the same...
-
-
+use Illuminate\Support\Facades\Auth;
+use App\Mail\JobPosted;
+use Illuminate\Support\Facades\Mail;
+use App\Models\Job;
 
 class PaystackPaymentController extends Controller
 {
     public function redirectToGateway(Request $request)
     {
-    
         try {
-           //  Validate user and payment details
-             $request->validate([
+            $request->validate([
                 'amount' => 'required|numeric|min:1',
             ]);
 
-            // Get the correct base URL based on the environment
-            $baseUrl = config('app.url'); // or use env('APP_URL')
-
-            // Create the callback URL dynamically
+            $baseUrl = config('app.url');
             $callbackUrl = $baseUrl . '/payment/callback';
 
-
-                 
-        
             $data = [
-                'email' => $request->user()->email, // Ensure the email is set correctly
-                'amount' => $request->amount * 100, // Amount in kobo
-                'callback_url' => $callbackUrl, // Set the callback URL
+                'email' => $request->user()->email,
+                'amount' => $request->amount * 100,
+                'callback_url' => $callbackUrl,
             ];
-
-
 
             Payment::create([
                 'amount' => $request->amount,
                 'user_id' => $request->user()->id,
             ]);
-        
-            
-        
-        
-         return Paystack()->getAuthorizationUrl($data)->redirectNow();
-         
-            
+
+            return Paystack::getAuthorizationUrl($data)->redirectNow();
         } catch (\Exception $e) {
             Log::error('Paystack redirect error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'The Paystack token has expired. Please try again.']);
         }
-
     }
 
-    public function handleGatewayCallback(Request  $request)
+    public function handleGatewayCallback(Request $request)
     {
         $paymentDetails = Paystack::getPaymentData();
 
-        //dd($paymentDetails);
-
-        // Check the status of the payment
         if ($paymentDetails['status'] == 'success') {
             try {
+                $userID = $request->user()->id;
 
-                
-             //   DB::beginTransaction();
+                $reference = $paymentDetails['data']['reference'];
+                $status = $paymentDetails['data']['status'];
 
-              $user = $request->user()->id;
-
-              $reference = $paymentDetails['data']['reference'];
-              $status = $paymentDetails['data']['status'];
-  
-
-                Payment::where('user_id', $user)->first()->update([
+                // Update payment record
+                Payment::where('user_id', $userID)->first()->update([
                     'payment_reference' => $reference,
                     'payment_status' => $status,
                 ]);
 
-                // Save job as featured and handle post-payment logic here
-                // Example: Save the job to the database
-                // Job::create([...]);
+                // Retrieve job data from session
+                
+                $jobData = session('job_data');
+                $tags = session('tags');
 
-               // DB::commit();
+              //  dd($jobData);
+                // Ensure job data exists
+                if ($jobData) {
+                    $jobData['employer_id'] = Auth::user()->employer->id;
+                    $jobData['employer_name'] = Auth::user()->employer->name;
+                    $jobData['featured'] = true;
 
-                return redirect('/')->with('success', 'Payment successful and job posted!');
+                    unset($jobData['tags']);
 
+                    // Create the job
+                    $job = Auth::user()->employer->jobs()->create($jobData);
+
+                    // Attach tags if any
+                    if (!empty($tags)) {
+                        foreach (explode(',', $tags) as $tag) {
+                            $job->tag($tag);
+                        }
+                    }
+
+                    // Send job posting email
+                    $user = Auth::user();
+                    try {
+                        Mail::to($user->email)->send(new JobPosted(
+                            $job->title,
+                            $job->salary,
+                            $job->url,
+                            $job->schedule,
+                            $job->location
+                        ));
+                        Log::info('Job posting email sent to ' . $user->email);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send job posting email: ' . $user->email . ' Error: ' . $e->getMessage());
+                    }
+
+                    // Clear session data
+                    session()->forget(['job_data', 'tags']);
+
+                    return redirect('/')->with('success', 'Payment successful and job posted!');
+                } else {
+                    Log::error('No job data found in session.');
+                    return redirect('/')->with('error', 'Job data not found.');
+                }
             } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Post-payment logic error: ' . $e->getMessage());
-                return redirect('/')->with('error', 'There was an error processing your payment. Please contact support.');
+                Log::error('Payment processing error: ' . $e->getMessage());
+                return redirect('/')->with('error', 'Payment failed.');
             }
         } else {
-            return redirect('/')->with('error', 'Payment failed. Please try again.');
+            return redirect('/')->with('error', 'Payment not successful.');
         }
     }
 }

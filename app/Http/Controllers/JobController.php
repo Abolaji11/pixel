@@ -44,7 +44,33 @@ class JobController extends Controller
         'tags' => ['nullable', 'string'],
     ]);
 
-    $attributes['featured'] = $request->has('featured');
+      $isFeatured = $request->has('featured');
+
+    if ($isFeatured) {
+
+    session([
+             'job_data' => $attributes,
+                'tags' => $attributes['tags']
+            ]);
+
+      // Redirect to payment page
+      //return redirect()->route('payment-page')->withInput($request->all());
+      return redirect()->route('payment-page', [
+               'amount' => 10,
+                'description' => 'This is a featured Job Post',
+            ]);
+         
+
+    }
+
+ // if ($request->input('featured')) {
+    //     return redirect()->route('payment-page', [
+    //         'amount' => 10,
+    //         'description' => 'Featured Job Post',
+    //     ]);
+    // }
+
+    $attributes['featured'] = false;
     $attributes['employer_id'] = Auth::user()->employer->id;
     $attributes['employer_name'] = Auth::user()->employer->name;
 
@@ -71,73 +97,21 @@ class JobController extends Controller
         Log::error('Failed to send job posting email: ' . $user->email . ' Error: ' . $e->getMessage());
     }
 
-    if ($request->input('featured')) {
-        return redirect()->route('payment-page', [
-            'amount' => 10,
-            'description' => 'Featured Job Post',
-        ]);
-    }
+   
 
     return redirect('/')->with('success', 'Job posted successfully!');
 }
 
+public function career()
+{
+    // Your logic here
+    return view('career');
 }
 
+public function salary()
+{
+    // Your logic here
+    return view('salary');
+}
 
-    // public function store(Request $request)
-    // {
-    //     $attributes = $request->validate([
-    //         'title' => ['required'],
-    //         'salary' => ['required'],
-    //         'location' => ['required'],
-    //         'schedule' => ['required', Rule::in(['Part Time', 'Full Time'])],
-    //         'url' => ['required', 'active_url'],
-    //         'tags' => ['nullable', 'string'],
-    //     ]);
-
-    //     $attributes['featured'] = $request->has('featured');
-    //     $attributes['employer_id'] = Auth::user()->employer->id;
-    //     $attributes['employer_name'] = Auth::user()->employer->name;
-
-    //     $job = Auth::user()->employer->jobs()->create(Arr::except($attributes, 'tags'));
-
-    //     if (!empty($attributes['tags'])) {
-    //         foreach (explode(',', $attributes['tags']) as $tag) {
-    //             $job->tag($tag);
-    //         }
-    //     }
-
-    //  // Notify the employer about the job posting
-    //     //dd($job);
-    //     $user = Auth::user();
-    //     $name = $user->name;
-    //     $email = $user->email;
-    //     $salary = $job->salary;
-    //     $title = $job->title;
-    //     $url = $job->url;
-    //     $schedule = $job->schedule;
-    //     $location = $job->location;
-        
-    
-            
-       
-    //     try {
-
-    //         //Mail::to($job->employer->user)->send(new JobPosted($user, $job));
-    //         Mail::to($user->email)->send(new JobPosted($salary, $title, $url, $schedule, $location));
-    //         Log::info('Job posting email sent to ' . $user->email);
-    //     } catch (\Exception $e) {
-    //         Log::error('Failed to send job posting email: ' . $user->email . ' Error: ' . $e->getMessage());   
-
-    //     }
-
-    //     // Handle featured job redirection to payment
-    //     if ($request->input('featured')) {
-    //         return redirect()->route('payment-page', [
-    //             'amount' => 10,
-    //             'description' => 'Featured Job Post',
-    //         ]);
-    //     }
-
-    //     return redirect('/')->with('success', 'Job posted successfully!');
-    // }
+}
