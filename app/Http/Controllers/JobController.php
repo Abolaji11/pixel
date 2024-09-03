@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User; // Fixed the capitalization of User
 use App\Models\Job;
 use App\Models\Tag;
 use Illuminate\Http\Request;
@@ -14,18 +13,52 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 
+
 class JobController extends Controller
 {
+    
     public function index()
-    {
-        $jobs = Job::latest()->with(['employer', 'tags'])->get()->groupBy('featured');
+{
+    // Paginate featured jobs
+    $featuredJobs = Job::latest()
+        ->where('featured', true)
+        ->with(['employer', 'tags'])
+        ->paginate(10);
 
-        return view('jobs.index', [
-            'jobs' => $jobs[0] ?? collect(),  // Added null coalescing operator to handle empty groups
-            'featuredjobs' => $jobs[1] ?? collect(),  // Added null coalescing operator to handle empty groups
-            'tags' => Tag::all(),
-        ]);
-    }
+    // Paginate regular jobs
+    $regularJobs = Job::latest()
+        ->where('featured', false)
+        ->with(['employer', 'tags'])
+        ->paginate(5);
+
+    $tags = Tag::paginate(10);
+
+    return view('jobs.index', [
+        'jobs' => $regularJobs,
+        'featuredjobs' => $featuredJobs,
+        'tags' => $tags,
+    ]);
+}
+
+
+//     public function index()
+// {
+//     // Fetch all jobs with pagination
+//     $jobsQuery = Job::latest()->with(['employer', 'tags']);
+
+//     // Separate featured and regular jobs
+//     $featuredJobs = $jobsQuery->where('featured', true)->paginate(10);
+//     $regularJobs = $jobsQuery->where('featured', false)->paginate(5);
+
+//     return view('jobs.index', [
+//         'jobs' => $regularJobs,
+//         'featuredjobs' => $featuredJobs,
+//         'tags' => Tag::all(),
+//     ]);
+// }
+
+    
+  
 
     public function create()
     {
@@ -53,7 +86,6 @@ class JobController extends Controller
                 'tags' => $attributes['tags']
             ]);
 
-      // Redirect to payment page
       //return redirect()->route('payment-page')->withInput($request->all());
       return redirect()->route('payment-page', [
                'amount' => 10,
@@ -104,13 +136,11 @@ class JobController extends Controller
 
 public function career()
 {
-    // Your logic here
     return view('career');
 }
 
 public function salary()
 {
-    // Your logic here
     return view('salary');
 }
 

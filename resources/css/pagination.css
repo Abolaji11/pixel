@@ -1,0 +1,49 @@
+
+nav ul.pagination li.active span {
+    background-color: #28a745;
+    color: white;
+    border: 1px solid #28a745;
+}
+
+
+.pagination {
+    display: flex;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pagination li {
+    margin: 0 4px;
+}
+
+.pagination li a,
+.pagination li span {
+    display: block;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: #007bff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.pagination li a:hover {
+    background-color: #488acd;
+}
+
+.pagination li.active span {
+    background-color: #28a745 !important; /* Green background for the current page */
+    color: rgb(145, 28, 28) !important; /* White text color */
+    border: 1px solid #28a745; /* Match border to background color */
+}
+
+.pagination li.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.pagination li.disabled span {
+    cursor: default;
+}
+
