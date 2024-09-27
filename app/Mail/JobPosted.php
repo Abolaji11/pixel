@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
+
 class JobPosted extends Mailable
 {
     use Queueable, SerializesModels;
@@ -16,17 +17,20 @@ class JobPosted extends Mailable
     public $location;
     public $url;
     public $schedule;
+    public $paymentReference;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($title, $salary, $url, $schedule, $location)
+    public function __construct($title, $salary, $url, $schedule, $location, $paymentReference)
     {
         $this->title = $title;
         $this->salary = $salary;
         $this->location = $location;
         $this->url = $url;
         $this->schedule = $schedule;
+        $this->paymentReference = $paymentReference;
+        
     }
 
     /**
@@ -34,6 +38,7 @@ class JobPosted extends Mailable
      */
     public function build()
     {
+        $receiptUrl = route('receipts.show', ['reference' => $this->paymentReference]);
         return $this->subject('Your Job Posting is Live!')
                     ->view('mail.JobPosted')
                     ->with([
@@ -42,6 +47,9 @@ class JobPosted extends Mailable
                         'location' => $this->location,
                         'url' => $this->url,
                         'schedule' => $this->schedule,
+                        'receiptUrl' => $receiptUrl,
+             
                     ]);
     }
 }
+

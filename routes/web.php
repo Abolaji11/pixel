@@ -8,17 +8,9 @@ use App\Http\Controllers\searchcontroller;
 use App\Http\Controllers\tagcontroller;
 use App\Http\Controllers\paystackpaymentcontroller;
 use App\Http\Controllers\PaymentController;
-use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\PaymentReceiptController;
 
 
-// Route::get('/test-email', function () {
-//     Mail::raw('This is a test email', function ($message) {
-//         $message->to('your_test_email@mailtrap.io')
-//                 ->subject('Test Email');
-//     });
-
-//     return 'Test email sent!';
-// });
 
 Route::get('/career', [jobcontroller::class, 'career']);
 Route::get('/', [jobcontroller::class, 'index']);
@@ -30,7 +22,15 @@ Route::post('/jobs', [jobcontroller::class,'store'])->middleware('auth');
 Route::post('/pay', [PaystackPaymentController::class, 'redirectToGateway'])->name('pay');
 Route::get('/payment/callback', [PaystackPaymentController::class, 'handleGatewayCallback']);
 Route::get('/payment-page',  [PaymentController::class, 'payment'])->name('payment-page');
-    
+
+
+Route::get('receipts/{id}', [PaymentReceiptController::class, 'show'])->name('receipts.show');
+Route::get('receipts/{reference}', [PaymentReceiptController::class, 'show'])->name('receipts.show');
+Route::middleware([  'web', 'auth', 'isAdmin'])->group(function () {
+    Route::get('/payment-receipts', [PaymentReceiptController::class, 'index'])->name('receipts.index') ;
+});
+
+
 
 Route::get('/search', [searchcontroller::class, '__invoke']);
 Route::get('/tags/{tag:name}', tagcontroller::class, );

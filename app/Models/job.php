@@ -29,4 +29,12 @@ class job extends Model
     {
         return $this->belongsTo(employer::class);
     }
+
+    public function paymentReceipt()
+    {
+        return $this->hasOne(paymentReceipt::class);
+    }
+
+
+
 }

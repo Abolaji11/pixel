@@ -6,13 +6,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $guarded = []; // Make sure this is 'guarded' and not 'gaurded'
+    protected $guarded = []; 
 
     protected $hidden = [
         'password',
@@ -34,4 +33,16 @@ class User extends Authenticatable
 
         return $this->BelongsToMany(Payment::class);
     }
+
+    public function paymentReceipt()
+    {
+        return $this->hasMany(paymentReceipt::class);
+    }
+
+    public function isAdmin()
+    {
+        return $this->is_admin===true;
+    }
+    
+
 }

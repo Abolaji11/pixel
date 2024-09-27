@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Mail\JobPosted;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Job;
+use App\Models\PaymentReceipt; 
+
 
 class PaystackPaymentController extends Controller
 {
@@ -43,75 +45,95 @@ class PaystackPaymentController extends Controller
     }
 
     public function handleGatewayCallback(Request $request)
-    {
-        $paymentDetails = Paystack::getPaymentData();
+{
+    $paymentDetails = Paystack::getPaymentData();
 
-        if ($paymentDetails['status'] == 'success') {
-            try {
-                $userID = $request->user()->id;
+    try {
+        $paymentReceipt = PaymentReceipt::create([
+            'user_id' => $request->user()->id,
+            'payment_reference' => $paymentDetails['data']['reference'] ?? null,
+            'status' => $paymentDetails['data']['status'],
+            'amount' => $paymentDetails['data']['amount'] / 100, 
+            'paystack_response' => json_encode($paymentDetails),
+            'error_message' => $paymentDetails['message'] ?? null,
+            'description' => 'Payment for a featured job', 
+            'payment_method' => $paymentDetails['data']['channel'] ?? null, 
+           // 'payment_date' => $paymentDetails['data']['paid_at'] ?? now(),
+            //'transaction_id' => $paymentDetails['data']['id'] ?? null,
+     
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Failed to save payment receipt: ' . $e->getMessage());
+        Log::info('Paystack payment details: ' . json_encode($paymentDetails));
 
-                $reference = $paymentDetails['data']['reference'];
-                $status = $paymentDetails['data']['status'];
-
-                // Update payment record
-                Payment::where('user_id', $userID)->first()->update([
-                    'payment_reference' => $reference,
-                    'payment_status' => $status,
-                ]);
-
-                // Retrieve job data from session
-                
-                $jobData = session('job_data');
-                $tags = session('tags');
-
-              //  dd($jobData);
-                // Ensure job data exists
-                if ($jobData) {
-                    $jobData['employer_id'] = Auth::user()->employer->id;
-                    $jobData['employer_name'] = Auth::user()->employer->name;
-                    $jobData['featured'] = true;
-
-                    unset($jobData['tags']);
-
-                    // Create the job
-                    $job = Auth::user()->employer->jobs()->create($jobData);
-
-                    // Attach tags if any
-                    if (!empty($tags)) {
-                        foreach (explode(',', $tags) as $tag) {
-                            $job->tag($tag);
-                        }
-                    }
-
-                    // Send job posting email
-                    $user = Auth::user();
-                    try {
-                        Mail::to($user->email)->send(new JobPosted(
-                            $job->title,
-                            $job->salary,
-                            $job->url,
-                            $job->schedule,
-                            $job->location
-                        ));
-                        Log::info('Job posting email sent to ' . $user->email);
-                    } catch (\Exception $e) {
-                        Log::error('Failed to send job posting email: ' . $user->email . ' Error: ' . $e->getMessage());
-                    }
-
-                    // Clear session data
-                    session()->forget(['job_data', 'tags']);
-
-                    return redirect('/')->with('success', 'Payment successful and job posted!');
-                } else {
-                    Log::error('No job data found in session.');
-                    return redirect('/')->with('error', 'Job data not found.');
-                }
-            } catch (\Exception $e) {
-                Log::error('Payment processing error: ' . $e->getMessage());
-                return redirect('/')->with('error', 'Payment failed.');
-            }
-        } else {
-            return redirect('/')->with('error', 'Payment not successful.');
-        }
+        return redirect('/')->with('error', 'Failed to process payment data.');
     }
+
+    if ($paymentDetails['status'] == 'success') {
+        try {
+            $userID = $request->user()->id;
+            $reference = $paymentDetails['data']['reference'];
+            $status = $paymentDetails['data']['status'];
+
+            // Update payment record
+            Payment::where('user_id', $userID)
+                  ->where('payment_reference', $reference)
+                  ->update([
+                      'payment_status' => $status,
+                  ]);
+
+            // Retrieve job data from session
+            $jobData = session('job_data');
+            $tags = session('tags');
+
+            // Ensure job data exists
+            if (!$jobData) {
+                Log::error('No job data found in session.');
+                return redirect('/')->with('error', 'Job data not found.');
+            }
+
+            // Create the job
+            $jobData['employer_id'] = Auth::user()->employer->id;
+            $jobData['employer_name'] = Auth::user()->employer->name;
+            $jobData['featured'] = true;
+            unset($jobData['tags']);
+
+            $job = Auth::user()->employer->jobs()->create($jobData);
+
+            // Attach tags if any
+            if (!empty($tags)) {
+                foreach (explode(',', $tags) as $tag) {
+                    $job->tag($tag);
+                }
+            }
+
+            $user = Auth::user();
+            try {
+                Mail::to($user->email)->send(new JobPosted(
+                    $job->title,
+                    $job->salary,
+                    $job->url,
+                    $job->schedule,
+                    $job->location,
+                    $paymentReceipt->payment_reference,
+                ));
+                Log::info('Job posting email sent to ' . $user->email);
+            } catch (\Exception $e) {
+                Log::error('Failed to send job posting email: ' . $user->email . ' Error: ' . $e->getMessage());
+                return redirect('/')->with('success', 'Payment successful and job posted, but email failed to send.');
+            }
+
+            // Clear session data
+            session()->forget(['job_data', 'tags']);
+
+            return redirect('/')->with('success', 'Payment successful and job posted!');
+        } catch (\Exception $e) {
+            Log::error('Payment processing error: ' . $e->getMessage());
+            return redirect('/')->with('error', 'Payment failed.');
+        }
+    } else {
+        return redirect('/')->with('error', 'Payment not successful.');
+    }
+}
+
 }
